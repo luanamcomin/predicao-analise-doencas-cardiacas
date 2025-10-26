@@ -142,7 +142,7 @@ Próximos passos recomendados:
 - Interpretação e comunicação: EDA com sumário, distribuição do alvo, estatísticas, correlações e gráficos interativos; README claro com instruções e limitações; interface organizada e responsiva.
 
 ## Estrutura do Projeto
-. ├─ app.py # Interface Streamlit (EDA, Classificação, Clusterização)
+  ├─ app.py # Interface Streamlit (EDA, Classificação, Clusterização)
   ├─ models.py # Carregamento, pré-processamento, treino e avaliação
   ├─ requirements.txt # Dependências
   ├─ README.md # Este arquivo
