@@ -90,10 +90,17 @@ Uso em predição individual:
 
 ## Aprendizagem Não Supervisionada (Clusterização)
 
-- KMeans com `k` ajustável (2 a 6).
-- Redução de dimensionalidade com PCA (2 componentes) para visualização.
-- Tabela com tamanho de cada cluster.
-- Objetivo: observar segmentações naturais (ex.: grupos por risco/atributos correlatos), gerando hipóteses clínicas.
+- KMeans com `k` ajustável (2 a 8).
+- Critérios de apoio à escolha do k:
+  - Elbow (WCSS/inertia) em expander dedicado.
+  - Silhouette: score médio e gráfico por cluster.
+- Visualizações e interpretações:
+  - PCA 2D colorido por cluster.
+  - Tabela de tamanhos por cluster.
+  - Centros dos clusters revertidos para escala original.
+  - Heatmap de perfis em z-score por cluster.
+  - Distribuição por cluster via gráfico de violino/box do atributo selecionado.
+- Objetivo: observar segmentações naturais e propor hipóteses clínicas.
 
 ## Interface e Usabilidade
 
@@ -126,9 +133,17 @@ Próximos passos recomendados:
 - Melhorias de EDA: análise de faltantes, outliers, segmentações por subgrupos (sexo/idade).
 - Clusterização: escolha de k via Silhouette/Elbow e perfis de cluster.
 
+## Critérios atendidos
+
+- Aplicação prática e interativa em Streamlit demonstrando técnicas de ML supervisionada e não supervisionada em dataset real de saúde (UCI Heart Disease).
+- Coleta e tratamento de dados: carregamento via `ucimlrepo`, limpeza de faltantes, coerção de tipos (`ca`, `thal`), padronização de nomes, escalonamento (`StandardScaler`).
+- Modelagem supervisionada: Random Forest com avaliação (hold-out estratificado), métricas (Acurácia, ROC-AUC), PR Curve (AP), matrizes de confusão (bruta e normalizada) e importâncias de atributos.
+- Modelagem não supervisionada: KMeans com seleção de `k` apoiada por Elbow e Silhouette, PCA 2D, centros na escala original, perfis em z-score e análise de distribuições por cluster.
+- Interpretação e comunicação: EDA com sumário, distribuição do alvo, estatísticas, correlações e gráficos interativos; README claro com instruções e limitações; interface organizada e responsiva.
+
 ## Estrutura do Projeto
-. ├─ app.py # Interface Streamlit (EDA, Classificação, Clusterização) 
-  ├─ models.py # Carregamento, pré-processamento, treino e avaliação 
-  ├─ requirements.txt # Dependências 
-  ├─ README.md # Este arquivo 
+. ├─ app.py # Interface Streamlit (EDA, Classificação, Clusterização)
+  ├─ models.py # Carregamento, pré-processamento, treino e avaliação
+  ├─ requirements.txt # Dependências
+  ├─ README.md # Este arquivo
   └─ venv/ # Ambiente virtual (opcional)

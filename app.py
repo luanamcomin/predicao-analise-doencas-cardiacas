@@ -2,58 +2,56 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix, RocCurveDisplay, silhouette_score, silhouette_samples
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score, silhouette_samples
 import matplotlib.pyplot as plt
 import seaborn as sns
-from ucimlrepo import fetch_ucirepo
-import pickle
-from models import load_processed_dataset as load_ds, train_model as model_train, evaluate_model as model_evaluate, FEATURE_COLS_PT, load_artifacts, save_artifacts
+from models import (
+    load_processed_dataset as load_ds,
+    train_model as model_train,
+    evaluate_model as model_evaluate,
+    FEATURE_COLS_PT,
+    load_artifacts,
+    save_artifacts,
+)
 
-# --- THIS IS THE LINE THAT WAS MOVED ---
-# It MUST be the first Streamlit command.
+# Configuração da página (deve ser o primeiro comando do Streamlit)
 st.set_page_config(page_title="Preditor de Doenças Cardíacas", layout="wide")
 
-# CSS global para controlar largura e evitar gráficos em tela cheia
+# Estilos globais (UX)
 st.markdown(
     """
     <style>
-    /* Limita a largura máxima do container central para melhor legibilidade */
     .block-container { max-width: 1100px; }
-
-    /* Evita que imagens/gráficos ocupem toda a largura */
     img { max-width: 600px !important; height: auto !important; }
-
-    /* Reduz o espaçamento entre colunas (melhor encaixe de gráficos menores) */
     div[data-testid=\"stHorizontalBlock\"] { gap: 0.5rem; }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-
-# --- 1. Model Training (and Caching) ---
+# Cache/Treino do modelo e carregamento de artefatos
 @st.cache_data
 def train_model():
+    """Encapsula o treino do modelo para uso com cache do Streamlit."""
     return model_train()
 
-# Load the model and scaler
-# Tenta carregar artefatos salvos, senão treina e salva
+# Carrega artefatos; se ausentes/corrompidos, re-treina e salva
 model, scaler = load_artifacts()
 if model is None or scaler is None:
     model, scaler = train_model()
     save_artifacts(model, scaler)
 
-
-# Funções auxiliares para avaliação supervisionada e clusterização
+# Dados processados (cache)
 @st.cache_data
 def _load_processed_dataset():
+    """Carrega X e y já tratados para EDA/clusterização."""
     return load_ds()
 
+# Seção de avaliação supervisionada
 def evaluate_model_section():
+    """Exibe métricas e gráficos do modelo supervisionado no conjunto de teste."""
     st.subheader('Aprendizado Supervisionado — Classificação')
     results = model_evaluate()
     acc = results['acc']
@@ -73,14 +71,16 @@ def evaluate_model_section():
     st.pyplot(results['fig_cm_norm'], width='content', clear_figure=True)
     st.pyplot(fig_roc, width='content', clear_figure=True)
 
+# Seção de clusterização (não supervisionado)
 def clustering_section():
+    """Aplica KMeans, auxilia na escolha de k e interpreta clusters."""
     st.subheader('Aprendizado Não Supervisionado — Clusterização (KMeans)')
     X, _ = _load_processed_dataset()
     scaler_c = StandardScaler()
     Xs = scaler_c.fit_transform(X)
 
+    # Seleção de k
     k = st.slider('Número de clusters (k)', 2, 8, 3)
-
     with st.expander('Escolha do k (Elbow)'):
         ks = list(range(2, 9))
         wcss = []
@@ -95,9 +95,9 @@ def clustering_section():
         ax_elbow.set_title('Elbow method')
         st.pyplot(fig_elbow, width='content', clear_figure=True)
 
+    # KMeans e métricas
     km = KMeans(n_clusters=k, random_state=42, n_init=10)
     labels = km.fit_predict(Xs)
-
     sil_avg = silhouette_score(Xs, labels)
     with st.expander(f'Silhouette (k={k}) — score médio: {sil_avg:.3f}'):
         sample_sil = silhouette_samples(Xs, labels)
@@ -117,6 +117,7 @@ def clustering_section():
         ax_sil.set_title('Gráfico de Silhouette')
         st.pyplot(fig_sil, width='content', clear_figure=True)
 
+    # Visualização PCA 2D
     pca = PCA(n_components=2, random_state=42)
     X2 = pca.fit_transform(Xs)
     fig_scatter, ax_scatter = plt.subplots(figsize=(4, 3))
@@ -129,6 +130,7 @@ def clustering_section():
     ax_scatter.legend(loc='best', fontsize='x-small')
     st.pyplot(fig_scatter, width='content', clear_figure=True)
 
+    # Tamanho e centros
     st.write('Tamanho dos clusters:')
     st.write(pd.Series(labels).value_counts().sort_index().rename('Contagem').to_frame())
 
@@ -139,6 +141,7 @@ def clustering_section():
     st.markdown('Centros dos clusters (escala original):')
     st.dataframe(centers_orig.round(2))
 
+    # Perfis (z-score) e distribuição por atributo
     group_means = pd.DataFrame(Xs, columns=X.columns).groupby(labels).mean()
     z_profile = group_means
     fig_hm, ax_hm = plt.subplots(figsize=(5, 3.5))
@@ -156,10 +159,12 @@ def clustering_section():
     ax_vio.set_title(f'Distribuição por cluster: {feat}')
     st.pyplot(fig_vio, width='content', clear_figure=True)
 
+# Seção de EDA
 def eda_section():
+    """Explora o dataset com métricas, correlações e gráficos interativos."""
     st.subheader('Análise Exploratória dos Dados (EDA)')
 
-    # Carregar dados para EDA
+    # Dados para EDA
     X, y = _load_processed_dataset()
 
     # Resumo geral
@@ -234,21 +239,17 @@ def eda_section():
         ax_s.set_title('Relação entre características (colorido pelo alvo)')
         st.pyplot(fig_s, width='content', clear_figure=True)
 
-# --- 2. Application Interface ---
-
-# --- Header ---
+# Interface da aplicação
 st.title(' Preditor de Doenças Cardíacas')
 st.markdown("""
 Este aplicativo estima a probabilidade de um paciente ter doença cardíaca com base em informações clínicas.
-Insira os dados do paciente na barra lateral para obter uma previsão.
 Isto é uma **ferramenta de apoio à decisão** e não substitui a avaliação médica profissional.
 """)
 
-# --- Barra lateral ---
-# (Formulário do paciente aparece apenas na página de Classificação)
-
+# Formulário do paciente (usado na aba Classificação)
 def user_input_features():
-    # Formulário com nomes de colunas em português (layout em colunas)
+    """Coleta os dados do paciente e retorna DataFrame com as features padronizadas pelo projeto."""
+    # Layout em colunas
     c1, c2, c3 = st.columns(3)
     with c1:
         idade = st.number_input('Idade', 1, 100, 50)

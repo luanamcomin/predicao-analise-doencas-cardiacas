@@ -1,17 +1,25 @@
+import os
+import pickle
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from ucimlrepo import fetch_ucirepo
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix, RocCurveDisplay
-from ucimlrepo import fetch_ucirepo
-import os
-import pickle
-from sklearn.metrics import precision_recall_curve, average_precision_score
+from sklearn.metrics import (
+    accuracy_score,
+    roc_auc_score,
+    confusion_matrix,
+    RocCurveDisplay,
+    precision_recall_curve,
+    average_precision_score,
+)
 
-# Mapeamento de colunas inglês -> português (mantendo nomes usados no app)
+"""Módulo de dados/modelos: carga, pré-processamento, treino e avaliação."""
+
+# Mapeamento de colunas inglês -> português (mantém nomes usados no app)
 COL_RENAME_PT = {
     'age': 'Idade',
     'sex': 'Sexo',
@@ -37,7 +45,7 @@ FEATURE_COLS_PT = [
 
 
 def load_processed_dataset():
-    """Carrega o dataset UCI, aplica limpeza, renomeia colunas para PT e retorna X, y (alvo binário)."""
+    """Carrega o dataset UCI, trata dados e retorna X (features) e y (alvo binário)."""
     heart_disease = fetch_ucirepo(id=45)
     X = heart_disease.data.features.copy()
     y = heart_disease.data.targets.copy()
@@ -58,7 +66,7 @@ def load_processed_dataset():
 
 
 def train_model():
-    """Treina o modelo RandomForest com scaler. Retorna (model, scaler)."""
+    """Treina RandomForest com StandardScaler e retorna (model, scaler)."""
     X, y = load_processed_dataset()
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
@@ -70,6 +78,7 @@ def train_model():
 
 
 def save_artifacts(model, scaler, path='artifacts'):
+    """Salva modelo e scaler em arquivos pickle."""
     os.makedirs(path, exist_ok=True)
     with open(os.path.join(path, 'model.pkl'), 'wb') as f:
         pickle.dump(model, f)
@@ -78,6 +87,7 @@ def save_artifacts(model, scaler, path='artifacts'):
 
 
 def load_artifacts(path='artifacts'):
+    """Carrega artefatos; em falha remove arquivos e retorna (None, None)."""
     model_path = os.path.join(path, 'model.pkl')
     scaler_path = os.path.join(path, 'scaler.pkl')
     if os.path.exists(model_path) and os.path.exists(scaler_path):
@@ -101,9 +111,7 @@ def load_artifacts(path='artifacts'):
 
 
 def evaluate_model():
-    """Executa holdout, treina e retorna métricas e figuras para o app exibir (sem usar Streamlit).
-    Retorna dict com: acc, auc, importances(pd.Series), fig_imp, fig_cm, fig_roc.
-    """
+    """Executa holdout, treina e retorna métricas e figuras para o app (sem Streamlit)."""
     X, y = load_processed_dataset()
 
     scaler_eval = StandardScaler()
