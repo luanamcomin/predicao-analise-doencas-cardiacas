@@ -260,30 +260,39 @@ def eda_section():
 st.title(' Preditor de Doenças Cardíacas')
 st.markdown("""
 Este aplicativo estima a probabilidade de um paciente ter doença cardíaca com base em informações clínicas.
+
+
 Isto é uma **ferramenta de apoio à decisão** e não substitui a avaliação médica profissional.
 """)
 
 # Formulário do paciente (usado na aba Classificação)
 def user_input_features():
     """Coleta os dados do paciente e retorna DataFrame com as features padronizadas pelo projeto."""
-    # Layout em colunas
+    
+
+    
+    # Demais campos organizados em colunas
     c1, c2, c3 = st.columns(3)
     with c1:
         idade = st.number_input('Idade', 1, 100, 50)
         colesterol = st.number_input('Colesterol Sérico (mg/dL)', 100, 600, 200)
-        depressao_st = st.slider('Depressão do Segmento ST (oldpeak)', 0.0, 6.2, 1.0, 0.1)
         vasos_coloridos = st.selectbox('Nº de Vasos Principais Corados por Fluoroscopia', (0, 1, 2, 3, 4))
+        tipo_dor_peito = st.selectbox('Tipo de Dor no Peito', (0, 1, 2, 3), format_func=lambda x: {0: 'Angina Típica', 1: 'Angina Atípica', 2: 'Dor Não Anginosa', 3: 'Assintomático'}[x])
+
     with c2:
         sexo = st.selectbox('Sexo', ('Masculino', 'Feminino'))
         glicemia_jejum_txt = st.selectbox('Glicemia de Jejum > 120 mg/dL', ('Não', 'Sim'))
         inclinacao_st = st.selectbox('Inclinação do Segmento ST no Pico do Exercício', (0, 1, 2), format_func=lambda x: {0: 'Ascendente', 1: 'Plano', 2: 'Descendente'}[x])
         talassemia = st.selectbox('Talassemia', (0, 1, 2, 3), format_func=lambda x: {0: 'Desconhecido', 1: 'Normal', 2: 'Defeito Fixo', 3: 'Defeito Reversível'}[x])
     with c3:
-        tipo_dor_peito = st.selectbox('Tipo de Dor no Peito', (0, 1, 2, 3), format_func=lambda x: {0: 'Angina Típica', 1: 'Angina Atípica', 2: 'Dor Não Anginosa', 3: 'Assintomático'}[x])
         pressao_reposo = st.number_input('Pressão Arterial em Repouso (mmHg)', 80, 200, 120)
         ecg_repouso = st.selectbox('Resultado do ECG de Repouso', (0, 1, 2), format_func=lambda x: {0: 'Normal', 1: 'Anormalidade de ST-T', 2: 'Hipertrofia Ventricular Esquerda'}[x])
         frequencia_cardiaca_maxima = st.number_input('Frequencia cardiaca maxima', 60, 220, 150)
         angina_exercicio_txt = st.selectbox('Angina Induzida por Exercício', ('Não', 'Sim'))
+
+    depressao_st = st.slider('Depressão do Segmento ST (oldpeak)', 0.0, 6.2, 1.0, 0.1)
+    divider = st.divider()
+
         
 
     sexo_num = 1 if sexo == 'Masculino' else 0
@@ -314,13 +323,31 @@ nav = st.sidebar.radio('Navegação', ['Análise Exploratória', 'Classificaçã
 if nav == 'Análise Exploratória':
     eda_section()
 elif nav == 'Classificação (Supervisionado)':
-    # Formulário de Dados do Paciente no início da aba
+
     st.subheader('Dados do Paciente')
     input_df = user_input_features()
     st.write(input_df)
 
-    # Predição individual (botão e resultado logo abaixo do formulário)
-    if st.button('**Prever Risco de Doença Cardíaca**'):
+    st.markdown(
+        """
+        <style>
+        div.stButton > button {
+            background: linear-gradient(90deg,#2563eb,#1d4ed8);
+            color: #fff; border: 1px solid #1e40af; border-radius: 10px;
+            padding: 0.7rem 1.25rem; font-weight: 600; letter-spacing: .2px;
+            box-shadow: 0 6px 18px rgba(29,78,216,.25);
+        }
+        div.stButton > button:hover { filter: brightness(1.05); transform: translateY(-1px); }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    b1, b2, b3 = st.columns([1, 1, 1])
+    with b2:
+        predict_clicked = st.button('Prever Risco de Doença Cardíaca', type='primary', use_container_width=True)
+
+    if predict_clicked:
         # Garantir ordem e nomes das colunas conforme treino
         input_ordered = input_df.reindex(columns=FEATURE_COLS_PT)
         input_scaled = scaler.transform(input_ordered)

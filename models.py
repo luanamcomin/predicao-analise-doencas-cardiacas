@@ -138,10 +138,11 @@ def evaluate_model():
 
     # Figuras
     # Importâncias
-    fig_imp, ax_imp = plt.subplots(figsize=(4, 3))
+    fig_imp, ax_imp = plt.subplots(figsize=(8, 7))
     importances.tail(10).plot(kind='barh', ax=ax_imp, color='#1f77b4')
-    ax_imp.set_title('Top 10 Importâncias de Atributos')
-    ax_imp.set_xlabel('Importância (Gini)')
+    ax_imp.set_title('Top 10 Importâncias de Atributos', fontsize=20)
+    ax_imp.set_xlabel('Importância (Gini)', fontsize=18)
+    ax_imp.tick_params(axis='both', labelsize=14)
 
     # Matriz de confusão
     cm = confusion_matrix(y_test, y_pred)

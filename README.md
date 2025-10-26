@@ -7,6 +7,7 @@ Aplicativo interativo em Streamlit para estimar o risco de doença cardíaca com
 
 ## Sumário
 - [Visão Geral](#visão-geral)
+- [Como o projeto funciona (passo a passo)](#como-o-projeto-funciona-passo-a-passo)
 - [Arquitetura e Organização](#arquitetura-e-organização)
 - [Como Executar Localmente](#como-executar-localmente)
 - [Fluxo de Dados e Tratamento](#fluxo-de-dados-e-tratamento)
@@ -24,6 +25,28 @@ Aplicativo interativo em Streamlit para estimar o risco de doença cardíaca com
 - Objetivo: auxiliar na avaliação do risco de doença cardíaca a partir de dados clínicos.
 - Público: profissionais de saúde e estudantes que desejam um apoio à decisão com interpretação visual.
 - Escopo: estudo educacional/demonstrativo. Não substitui avaliação médica.
+
+## Como o projeto funciona (passo a passo)
+
+- Dados são baixados do repositório UCI via `ucimlrepo` quando necessário.
+- O dataset é limpo e padronizado em `models.py`:
+  - Conversão de `?` para `NaN` e coerção de tipos (ex.: `ca`, `thal`).
+  - Imputação de faltantes por mediana.
+  - Renomeação das colunas para português e seleção de um conjunto consistente de atributos.
+- Para avaliação do classificador:
+  - Os dados são divididos em treino/teste (75/25, estratificado).
+  - As features são padronizadas com `StandardScaler`.
+  - Um `RandomForestClassifier` é treinado com hiperparâmetros definidos.
+  - Métricas e gráficos (ROC, matriz de confusão, PR, importâncias) são gerados.
+- No app (Streamlit):
+  - Aba EDA: visualizações exploratórias do dataset.
+  - Aba Classificação: formulário "Dados do Paciente" faz predição individual usando o scaler/modelo.
+  - Aba Agrupamento: KMeans com k ajustável, PCA 2D, heatmap de perfis e comparações por atributo.
+- Artefatos (modelo e scaler) podem ser salvos/carregados para reuso.
+
+Fluxo simplificado:
+
+`Dados UCI` → `Limpeza e padronização` → `Split treino/teste` → `Scaler + RandomForest` → `Métricas e figuras` → `Interface Streamlit (EDA/Classificação/Clusterização)`
 
 ## Arquitetura e Organização
 
