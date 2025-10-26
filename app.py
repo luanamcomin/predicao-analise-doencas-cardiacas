@@ -65,11 +65,16 @@ def evaluate_model_section():
         st.metric('ROC-AUC (teste)', f"{auc:.3f}")
     with c2:
         st.pyplot(fig_imp, width='content', clear_figure=True)
+        plt.close(fig_imp)
     with c3:
         st.pyplot(results['fig_pr'], width='content', clear_figure=True)
+        plt.close(results['fig_pr'])
     st.pyplot(fig_cm, width='content', clear_figure=True)
+    plt.close(fig_cm)
     st.pyplot(results['fig_cm_norm'], width='content', clear_figure=True)
+    plt.close(results['fig_cm_norm'])
     st.pyplot(fig_roc, width='content', clear_figure=True)
+    plt.close(fig_roc)
 
 # Seção de clusterização (não supervisionado)
 def clustering_section():
@@ -94,6 +99,7 @@ def clustering_section():
         ax_elbow.set_ylabel('WCSS (inertia)')
         ax_elbow.set_title('Elbow method')
         st.pyplot(fig_elbow, width='content', clear_figure=True)
+        plt.close(fig_elbow)
 
     # KMeans e métricas
     km = KMeans(n_clusters=k, random_state=42, n_init=10)
@@ -116,6 +122,7 @@ def clustering_section():
         ax_sil.set_ylabel('Clusters')
         ax_sil.set_title('Gráfico de Silhouette')
         st.pyplot(fig_sil, width='content', clear_figure=True)
+        plt.close(fig_sil)
 
     # Visualização PCA 2D
     pca = PCA(n_components=2, random_state=42)
@@ -129,6 +136,7 @@ def clustering_section():
     ax_scatter.set_ylabel('PC2')
     ax_scatter.legend(loc='best', fontsize='x-small')
     st.pyplot(fig_scatter, width='content', clear_figure=True)
+    plt.close(fig_scatter)
 
     # Tamanho e centros
     st.write('Tamanho dos clusters:')
@@ -150,14 +158,18 @@ def clustering_section():
     ax_hm.set_ylabel('Cluster')
     ax_hm.set_title('Perfis de clusters (z-score)')
     st.pyplot(fig_hm, width='content', clear_figure=True)
+    plt.close(fig_hm)
 
     feat = st.selectbox('Atributo para distribuição por cluster', X.columns.tolist())
     fig_vio, ax_vio = plt.subplots(figsize=(4, 3))
     tmp = X.copy()
     tmp['cluster'] = labels
-    sns.violinplot(data=tmp, x='cluster', y=feat, palette='tab10', ax=ax_vio, inner='box')
+    sns.violinplot(data=tmp, x='cluster', y=feat, hue='cluster', palette='tab10', ax=ax_vio, inner='box')
+    if ax_vio.get_legend() is not None:
+        ax_vio.get_legend().remove()
     ax_vio.set_title(f'Distribuição por cluster: {feat}')
     st.pyplot(fig_vio, width='content', clear_figure=True)
+    plt.close(fig_vio)
 
 # Seção de EDA
 def eda_section():
@@ -184,6 +196,7 @@ def eda_section():
     ax_t.set_xlabel('Classe')
     ax_t.set_ylabel('Contagem')
     st.pyplot(fig_t, width='content', clear_figure=True)
+    plt.close(fig_t)
 
     # Amostra de dados
     st.markdown('**Amostra dos dados:**')
@@ -204,6 +217,7 @@ def eda_section():
     sns.heatmap(X.corr(numeric_only=True), cmap='RdBu_r', center=0, ax=ax_corr)
     ax_corr.set_title('Correlação entre atributos')
     st.pyplot(fig_corr, width='content', clear_figure=True)
+    plt.close(fig_corr)
 
     # Explorações interativas
     st.markdown('**Explorações interativas:**')
@@ -222,11 +236,13 @@ def eda_section():
                     sns.histplot(X[col_name], bins=15, kde=True, ax=ax_h)
                     ax_h.set_title(f'Distribuição: {col_name}')
                     st.pyplot(fig_h, width='content', clear_figure=True)
+                    plt.close(fig_h)
 
                     fig_b, ax_b = plt.subplots(figsize=(3, 2.2))
                     sns.boxplot(x=X[col_name], ax=ax_b, color='#4c78a8')
                     ax_b.set_title(f'Boxplot: {col_name}')
                     st.pyplot(fig_b, width='content', clear_figure=True)
+                    plt.close(fig_b)
     with st.expander('Dispersão 2D (escolha eixos)', expanded=False):
         x_feat = st.selectbox('Eixo X', num_cols, index=num_cols.index('Idade') if 'Idade' in num_cols else 0)
         y_feat = st.selectbox('Eixo Y', num_cols, index=num_cols.index('Frequencia cardiaca maxima') if 'Frequencia cardiaca maxima' in num_cols else 1)
@@ -238,6 +254,7 @@ def eda_section():
         ax_s.set_ylabel(y_feat)
         ax_s.set_title('Relação entre características (colorido pelo alvo)')
         st.pyplot(fig_s, width='content', clear_figure=True)
+        plt.close(fig_s)
 
 # Interface da aplicação
 st.title(' Preditor de Doenças Cardíacas')
