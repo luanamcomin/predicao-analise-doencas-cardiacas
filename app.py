@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix, RocCurveDisplay
+from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix, RocCurveDisplay, silhouette_score, silhouette_samples
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
@@ -78,9 +78,45 @@ def clustering_section():
     X, _ = _load_processed_dataset()
     scaler_c = StandardScaler()
     Xs = scaler_c.fit_transform(X)
-    k = st.slider('Número de clusters (k)', 2, 6, 3)
+
+    k = st.slider('Número de clusters (k)', 2, 8, 3)
+
+    with st.expander('Escolha do k (Elbow)'):
+        ks = list(range(2, 9))
+        wcss = []
+        for kk in ks:
+            km_kk = KMeans(n_clusters=kk, random_state=42, n_init=10)
+            km_kk.fit(Xs)
+            wcss.append(km_kk.inertia_)
+        fig_elbow, ax_elbow = plt.subplots(figsize=(4, 3))
+        ax_elbow.plot(ks, wcss, marker='o')
+        ax_elbow.set_xlabel('k')
+        ax_elbow.set_ylabel('WCSS (inertia)')
+        ax_elbow.set_title('Elbow method')
+        st.pyplot(fig_elbow, width='content', clear_figure=True)
+
     km = KMeans(n_clusters=k, random_state=42, n_init=10)
     labels = km.fit_predict(Xs)
+
+    sil_avg = silhouette_score(Xs, labels)
+    with st.expander(f'Silhouette (k={k}) — score médio: {sil_avg:.3f}'):
+        sample_sil = silhouette_samples(Xs, labels)
+        fig_sil, ax_sil = plt.subplots(figsize=(4, 3))
+        y_lower = 10
+        for i in sorted(set(labels)):
+            ith_sil = sample_sil[labels == i]
+            ith_sil.sort()
+            size_i = ith_sil.shape[0]
+            y_upper = y_lower + size_i
+            ax_sil.fill_betweenx(np.arange(y_lower, y_upper), 0, ith_sil, alpha=0.7)
+            ax_sil.text(-0.05, y_lower + 0.5 * size_i, str(i))
+            y_lower = y_upper + 10
+        ax_sil.axvline(x=sil_avg, color='red', linestyle='--')
+        ax_sil.set_xlabel('Coeficiente de Silhouette')
+        ax_sil.set_ylabel('Clusters')
+        ax_sil.set_title('Gráfico de Silhouette')
+        st.pyplot(fig_sil, width='content', clear_figure=True)
+
     pca = PCA(n_components=2, random_state=42)
     X2 = pca.fit_transform(Xs)
     fig_scatter, ax_scatter = plt.subplots(figsize=(4, 3))
@@ -92,8 +128,33 @@ def clustering_section():
     ax_scatter.set_ylabel('PC2')
     ax_scatter.legend(loc='best', fontsize='x-small')
     st.pyplot(fig_scatter, width='content', clear_figure=True)
+
     st.write('Tamanho dos clusters:')
     st.write(pd.Series(labels).value_counts().sort_index().rename('Contagem').to_frame())
+
+    centers_orig = pd.DataFrame(
+        scaler_c.inverse_transform(km.cluster_centers_),
+        columns=X.columns
+    )
+    st.markdown('Centros dos clusters (escala original):')
+    st.dataframe(centers_orig.round(2))
+
+    group_means = pd.DataFrame(Xs, columns=X.columns).groupby(labels).mean()
+    z_profile = group_means
+    fig_hm, ax_hm = plt.subplots(figsize=(5, 3.5))
+    sns.heatmap(z_profile, cmap='vlag', center=0, annot=False, ax=ax_hm)
+    ax_hm.set_xlabel('Atributos')
+    ax_hm.set_ylabel('Cluster')
+    ax_hm.set_title('Perfis de clusters (z-score)')
+    st.pyplot(fig_hm, width='content', clear_figure=True)
+
+    feat = st.selectbox('Atributo para distribuição por cluster', X.columns.tolist())
+    fig_vio, ax_vio = plt.subplots(figsize=(4, 3))
+    tmp = X.copy()
+    tmp['cluster'] = labels
+    sns.violinplot(data=tmp, x='cluster', y=feat, palette='tab10', ax=ax_vio, inner='box')
+    ax_vio.set_title(f'Distribuição por cluster: {feat}')
+    st.pyplot(fig_vio, width='content', clear_figure=True)
 
 def eda_section():
     st.subheader('Análise Exploratória dos Dados (EDA)')
