@@ -249,16 +249,13 @@ Isto é uma **ferramenta de apoio à decisão** e não substitui a avaliação m
 # Formulário do paciente (usado na aba Classificação)
 def user_input_features():
     """Coleta os dados do paciente e retorna DataFrame com as features padronizadas pelo projeto."""
-    # Controles em largura total
-    depressao_st = st.slider('Depressão do Segmento ST (oldpeak)', 0.0, 6.2, 1.0, 0.1)
-
-    # Demais campos organizados em colunas
+    # Layout em colunas
     c1, c2, c3 = st.columns(3)
     with c1:
         idade = st.number_input('Idade', 1, 100, 50)
         colesterol = st.number_input('Colesterol Sérico (mg/dL)', 100, 600, 200)
+        depressao_st = st.slider('Depressão do Segmento ST (oldpeak)', 0.0, 6.2, 1.0, 0.1)
         vasos_coloridos = st.selectbox('Nº de Vasos Principais Corados por Fluoroscopia', (0, 1, 2, 3, 4))
-        angina_exercicio_txt = st.selectbox('Angina Induzida por Exercício', ('Não', 'Sim'))
     with c2:
         sexo = st.selectbox('Sexo', ('Masculino', 'Feminino'))
         glicemia_jejum_txt = st.selectbox('Glicemia de Jejum > 120 mg/dL', ('Não', 'Sim'))
@@ -269,6 +266,7 @@ def user_input_features():
         pressao_reposo = st.number_input('Pressão Arterial em Repouso (mmHg)', 80, 200, 120)
         ecg_repouso = st.selectbox('Resultado do ECG de Repouso', (0, 1, 2), format_func=lambda x: {0: 'Normal', 1: 'Anormalidade de ST-T', 2: 'Hipertrofia Ventricular Esquerda'}[x])
         frequencia_cardiaca_maxima = st.number_input('Frequencia cardiaca maxima', 60, 220, 150)
+        angina_exercicio_txt = st.selectbox('Angina Induzida por Exercício', ('Não', 'Sim'))
         
 
     sexo_num = 1 if sexo == 'Masculino' else 0
