@@ -81,11 +81,22 @@ def load_artifacts(path='artifacts'):
     model_path = os.path.join(path, 'model.pkl')
     scaler_path = os.path.join(path, 'scaler.pkl')
     if os.path.exists(model_path) and os.path.exists(scaler_path):
-        with open(model_path, 'rb') as f:
-            model = pickle.load(f)
-        with open(scaler_path, 'rb') as f:
-            scaler = pickle.load(f)
-        return model, scaler
+        try:
+            with open(model_path, 'rb') as f:
+                model = pickle.load(f)
+            with open(scaler_path, 'rb') as f:
+                scaler = pickle.load(f)
+            return model, scaler
+        except Exception:
+            try:
+                os.remove(model_path)
+            except Exception:
+                pass
+            try:
+                os.remove(scaler_path)
+            except Exception:
+                pass
+            return None, None
     return None, None
 
 
