@@ -2,7 +2,6 @@
 
 Aplicativo interativo em Streamlit para estimar o risco de doença cardíaca com base em atributos clínicos. O projeto cobre o pipeline end-to-end: aquisição e tratamento de dados, EDA, aprendizagem supervisionada (classificação) e não supervisionada (clusterização), com interface amigável para uso por profissionais de saúde.
 
-- Demo (exemplo): https://heart-disease-predictor-o7wgyxdm3jx9irfi2kfd7k.streamlit.app/
 - Acesse o app: https://ml-saude-luana-comin.streamlit.app
 - Dataset: UCI Heart Disease (id=45)
 
